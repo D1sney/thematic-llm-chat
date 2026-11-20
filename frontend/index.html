@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf8f5">
+  <meta name="description" content="LuChat — тренажёр собеседований с вопросами под вашу роль и разбором ответов.">
+  <title>LuChat — тренажёр собеседований</title>
+  <link rel="icon" href="/assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/chat.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img src="/assets/favicon.png" alt="" width="32" height="32">LuChat</div>
+    <span id="demo-label" class="demo-label" hidden>Демо</span>
+    <button type="button" id="logout" class="quiet" hidden>Выйти</button>
+  </header>
+
+  <main id="app">
+    <section id="login-view" class="login-layout" aria-labelledby="login-title" hidden>
+      <div class="introduction">
+        <h1>Репетиция<br>собеседования</h1>
+        <p>Ответьте на вопросы как на интервью. Лу подскажет, как сделать ответы убедительнее.</p>
+        <img src="/assets/lu.png" width="590" height="620" alt="">
+      </div>
+      <div class="login-panel">
+        <form id="login-form" novalidate>
+          <h2 id="login-title" tabindex="-1">Вход в чат</h2>
+          <label for="access-key">Ключ доступа</label>
+          <input id="access-key" type="password" autocomplete="current-password"
+                 autocapitalize="off" spellcheck="false" required
+                 aria-describedby="key-hint login-error">
+          <p id="key-hint" class="hint">8–255 символов. Латинские буквы, цифры, дефис и подчёркивание.</p>
+          <p id="login-error" class="error" role="alert"></p>
+          <button type="submit" class="primary" id="login-button" disabled>Войти</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="chat-view" class="chat" aria-label="Чат с Лу" hidden>
+      <div class="scroll" id="scroll">
+        <div id="welcome" class="welcome measure" hidden>
+          <img src="/assets/lu.png" width="118" height="124" alt="">
+          <h1>Потренируемся?</h1>
+          <p>На какую роль вы собеседуетесь? Я задам первый вопрос и помогу разобрать ваш ответ.</p>
+          <div class="suggestions" aria-label="Подсказки для начала разговора">
+            <button type="button" data-prompt="Хочу пройти пробное собеседование.">Начать собеседование</button>
+            <button type="button" data-prompt="Помоги подготовить ответ на вопрос «Расскажите о себе».">Рассказать о себе</button>
+            <button type="button" data-prompt="Хочу разобрать свой ответ на вопрос с собеседования.">Разобрать мой ответ</button>
+          </div>
+        </div>
+        <ol id="history" class="measure messages" aria-label="История сообщений" aria-live="polite"></ol>
+      </div>
+
+      <form id="message-form" class="composer measure" novalidate>
+        <p id="message-error" class="error" role="alert"></p>
+        <p id="waiting" class="waiting" role="status"></p>
+        <div class="compose-box">
+          <label for="message" class="visually-hidden">Сообщение</label>
+          <textarea id="message" rows="2" placeholder="Напишите Лу…"
+                    required aria-describedby="message-count message-error"></textarea>
+          <div class="compose-actions">
+            <span id="message-count" class="hint">0 / 500</span>
+            <button type="submit" class="primary send" id="send-button" disabled aria-label="Отправить">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 19V5m-6 6 6-6 6 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <div id="startup" class="startup">
+      <p id="startup-message" role="status">Открываем LuChat…</p>
+      <button type="button" class="primary" id="reload" hidden>Попробовать снова</button>
+    </div>
+    <noscript>Для работы LuChat включите JavaScript.</noscript>
+  </main>
+
+  <template id="message-template">
+    <li class="entry">
+      <article>
+        <header><span class="sender"></span><time></time></header>
+        <p class="message-text"></p>
+      </article>
+    </li>
+  </template>
+</body>
+</html>
