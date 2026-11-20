@@ -70,8 +70,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   background: var(--white);
 }
 .introduction {
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background: var(--soft);
   padding: clamp(24px, 4.4vw, 58px);
 }
@@ -84,12 +85,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 }
 .introduction h1 { max-width: 480px; font-size: clamp(38px, 5.55vw, 78px); color: #173e36; }
 .introduction p { max-width: 35ch; color: #3e5b51; line-height: 1.58; margin: 18px 0 0; }
-.introduction img {
-  display: block;
-  width: clamp(168px, 27vw, 332px);
-  height: auto;
-  margin: 18px 0 -95px auto;
+.interview-example {
+  align-self: start;
+  margin: clamp(24px, 5.5vh, 52px) 0 0;
+  border-top: 1px solid #a9bbb1;
+  padding: 12px 0 0;
 }
+.interview-example figcaption { color: #3e5b51; font-size: 12px; font-weight: 600; }
+.interview-example blockquote { max-width: 35ch; margin: 6px 0 0; font-family: var(--serif); font-size: clamp(20px, 2.5vw, 29px); font-weight: 600; line-height: 1.14; color: #173e36; }
 .login-panel { display: grid; place-items: center; padding: 36px clamp(24px, 4vw, 58px); }
 .login-panel form { width: min(100%, 328px); }
 .login-panel h2 { font-size: 47px; margin-bottom: 27px; }
@@ -135,7 +138,6 @@ body:has(.chat:not([hidden])) { height: 100vh; height: 100dvh; }
   justify-content: center;
   text-align: center;
 }
-.welcome img { object-fit: contain; margin-bottom: 12px; }
 .welcome h1 { font-size: clamp(46px, 8vw, 69px); }
 .welcome p { margin: 12px 0 25px; max-width: 45ch; line-height: 1.6; color: var(--muted); }
 .suggestions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
@@ -188,10 +190,9 @@ time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums;
 @media (max-width: 720px) {
   .topbar { min-height: 58px; }
   .login-layout { grid-template-columns: 1fr; align-self: start; width: min(470px, calc(100% - 32px)); margin: 20px auto; min-height: 0; }
-  .introduction { min-height: 238px; }
   .introduction h1 { font-size: clamp(37px, 9vw, 51px); }
-  .introduction p { max-width: 23ch; margin-top: 12px; font-size: 13px; }
-  .introduction img { position: absolute; bottom: 0; right: 2px; width: clamp(98px, 29vw, 160px); margin: 0; }
+  .introduction p { margin-top: 12px; font-size: 13px; }
+  .interview-example { margin-top: 18px; }
   .login-panel { padding: 24px; }
   .login-panel h2 { font-size: 39px; margin-bottom: 18px; }
   .measure { width: calc(100% - 28px); }

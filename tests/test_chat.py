@@ -63,11 +63,11 @@ def test_login_cookie_and_revocation(tmp_path):
         attributes = response.headers["set-cookie"]
         assert "HttpOnly" in attributes
         assert "SameSite=strict" in attributes
-        token = client.cookies["luchat_session"]
+        token = client.cookies["interview_session"]
         assert token != KEY
         assert client.get("/api/v1/messages").headers["cache-control"] == "no-store"
         assert client.delete("/api/v1/session").status_code == 204
-        client.cookies.set("luchat_session", token)
+        client.cookies.set("interview_session", token)
         assert client.get("/api/v1/messages").status_code == 401
 
 
@@ -77,10 +77,10 @@ def test_secure_cookie_and_key_rotation(tmp_path):
     ) as client:
         response = login(client)
         assert "Secure" in response.headers["set-cookie"]
-        token = client.cookies["luchat_session"]
+        token = client.cookies["interview_session"]
 
     with TestClient(create_app(settings(tmp_path, key=token_urlsafe(24)))) as client:
-        client.cookies.set("luchat_session", token)
+        client.cookies.set("interview_session", token)
         assert client.get("/api/v1/messages").status_code == 401
 
 
@@ -100,7 +100,7 @@ def test_dialogue_context_and_history_survive_restart(tmp_path):
     model = FakeModel()
     with TestClient(create_app(config, model=model)) as client:
         login(client)
-        token = client.cookies["luchat_session"]
+        token = client.cookies["interview_session"]
         first = client.post("/api/v1/messages", json={"text": "👍" * 500})
         assert first.status_code == 201
         second = client.post("/api/v1/messages", json={"text": " С чего начать? "})
@@ -110,7 +110,7 @@ def test_dialogue_context_and_history_survive_restart(tmp_path):
         expected = list(first.json().values()) + list(second.json().values())
 
     with TestClient(create_app(config)) as client:
-        client.cookies.set("luchat_session", token)
+        client.cookies.set("interview_session", token)
         result = client.get("/api/v1/messages")
         assert result.status_code == 200
         assert result.json()["messages"] == expected
@@ -145,7 +145,7 @@ def test_gemini_request_and_response():
         payload = json.loads(request.content)
         assert payload["model"] == "gemini-example"
         assert payload["store"] is False
-        assert "тренер по собеседованиям" in payload["system_instruction"]
+        assert "Ты интервьюер в тренажёре" in payload["system_instruction"]
         assert payload["input"] == [
             {
                 "type": "user_input",

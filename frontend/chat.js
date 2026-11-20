@@ -78,7 +78,7 @@ function syncComposer() {
   messageField.setAttribute("aria-invalid", String(tooLong));
   sendButton.disabled = sending || tooLong || !messageField.value.trim();
   messageField.readOnly = sending;
-  get("waiting").textContent = sending ? "Лу готовит ответ…" : "";
+  get("waiting").textContent = sending ? "Интервьюер готовит ответ…" : "";
   for (const button of starterButtons) {
     button.disabled = sending || (!!messageField.value.trim() && messageField.value !== selectedPrompt);
   }
@@ -89,7 +89,7 @@ function syncComposer() {
 function makeEntry({ role, text, created_at: createdAt }) {
   const entry = get("message-template").content.firstElementChild.cloneNode(true);
   entry.classList.add(role);
-  entry.querySelector(".sender").textContent = role === "user" ? "Вы" : "Лу";
+  entry.querySelector(".sender").textContent = role === "user" ? "Вы" : "Интервьюер";
   entry.querySelector(".message-text").textContent = text;
   const time = entry.querySelector("time");
   time.dateTime = createdAt;

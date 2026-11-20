@@ -40,7 +40,7 @@ def create_app(
                 )
             yield
 
-    app = FastAPI(title="LuChat", lifespan=lifespan)
+    app = FastAPI(title="Репетиция", lifespan=lifespan)
     app.state.settings = settings
 
     @app.middleware("http")

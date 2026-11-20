@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#faf8f5">
-  <meta name="description" content="LuChat — тренажёр собеседований с вопросами под вашу роль и разбором ответов.">
-  <title>LuChat — тренажёр собеседований</title>
+  <meta name="description" content="Репетиция — тренажёр собеседований с вопросами под вашу роль и разбором ответов.">
+  <title>Репетиция — тренажёр собеседований</title>
   <link rel="icon" href="/assets/favicon.png" type="image/png">
   <link rel="stylesheet" href="/styles.css">
   <script src="/chat.js" defer></script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><img src="/assets/favicon.png" alt="" width="32" height="32">LuChat</div>
+    <div class="brand"><img src="/assets/favicon.png" alt="" width="32" height="32">Репетиция</div>
     <span id="demo-label" class="demo-label" hidden>Демо</span>
     <button type="button" id="logout" class="quiet" hidden>Выйти</button>
   </header>
@@ -20,9 +20,12 @@
   <main id="app">
     <section id="login-view" class="login-layout" aria-labelledby="login-title" hidden>
       <div class="introduction">
-        <h1>Репетиция<br>собеседования</h1>
-        <p>Ответьте на вопросы как на интервью. Лу подскажет, как сделать ответы убедительнее.</p>
-        <img src="/assets/lu.png" width="590" height="620" alt="">
+        <h1>Тренажёр<br>собеседований</h1>
+        <p>Выберите роль, ответьте на вопросы интервьюера и узнайте, что можно улучшить.</p>
+        <figure class="interview-example">
+          <figcaption>Пример вопроса</figcaption>
+          <blockquote>Как вы действовали, когда сорвался срок?</blockquote>
+        </figure>
       </div>
       <div class="login-panel">
         <form id="login-form" novalidate>
@@ -38,10 +41,9 @@
       </div>
     </section>
 
-    <section id="chat-view" class="chat" aria-label="Чат с Лу" hidden>
+    <section id="chat-view" class="chat" aria-label="Чат с интервьюером" hidden>
       <div class="scroll" id="scroll">
         <div id="welcome" class="welcome measure" hidden>
-          <img src="/assets/lu.png" width="118" height="124" alt="">
           <h1>Потренируемся?</h1>
           <p>На какую роль вы собеседуетесь? Я задам первый вопрос и помогу разобрать ваш ответ.</p>
           <div class="suggestions" aria-label="Подсказки для начала разговора">
@@ -58,7 +60,7 @@
         <p id="waiting" class="waiting" role="status"></p>
         <div class="compose-box">
           <label for="message" class="visually-hidden">Сообщение</label>
-          <textarea id="message" rows="2" placeholder="Напишите Лу…"
+          <textarea id="message" rows="2" placeholder="Напишите интервьюеру…"
                     required aria-describedby="message-count message-error"></textarea>
           <div class="compose-actions">
             <span id="message-count" class="hint">0 / 500</span>
@@ -74,10 +76,10 @@
     </section>
 
     <div id="startup" class="startup">
-      <p id="startup-message" role="status">Открываем LuChat…</p>
+      <p id="startup-message" role="status">Открываем тренажёр…</p>
       <button type="button" class="primary" id="reload" hidden>Попробовать снова</button>
     </div>
-    <noscript>Для работы LuChat включите JavaScript.</noscript>
+    <noscript>Для работы тренажёра включите JavaScript.</noscript>
   </main>
 
   <template id="message-template">

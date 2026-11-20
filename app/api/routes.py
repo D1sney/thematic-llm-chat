@@ -9,7 +9,7 @@ from app.schemas import ChatInput, History, LoginInput, Turn
 from app.services.model import ModelError
 
 router = APIRouter(prefix="/api/v1")
-SESSION_COOKIE = "luchat_session"
+SESSION_COOKIE = "interview_session"
 CONTEXT_MESSAGES = 12
 
 
@@ -72,7 +72,7 @@ async def send_message(body: ChatInput, request: Request) -> Turn:
     state = request.app.state
     if state.turn_lock.locked():
         raise HTTPException(
-            409, "Лу ещё отвечает на предыдущее сообщение. Попробуйте через минуту."
+            409, "Интервьюер ещё готовит ответ. Подождите немного и попробуйте снова."
         )
     async with state.turn_lock:
         user_time = datetime.now(UTC)
