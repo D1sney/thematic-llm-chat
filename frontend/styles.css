@@ -51,7 +51,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 
 .topbar {
   min-height: 70px;
-  padding: 0 clamp(18px, 5vw, 76px);
+  padding: 0 clamp(16px, 4vw, 32px);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -196,10 +196,50 @@ body:has(.chat:not([hidden])) { height: 100vh; height: 100dvh; }
   .key-error:empty { transform: none; }
 }
 
-.chat-header-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-#clear-chat { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; }
-#clear-chat .icon { width: 18px; height: 18px; }
-#clear-chat:disabled { opacity: .55; background: transparent; }
+.chat-header-actions { display: flex; align-items: center; gap: var(--space-3); margin-left: auto; }
+.header-action {
+  --action-color: var(--accent);
+  --action-hover: var(--surface-hover);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color var(--duration-fast) ease, border-color var(--duration-fast) ease, color var(--duration-fast) ease;
+}
+.header-action .icon { width: 18px; height: 18px; color: var(--action-color); }
+.header-action:disabled { opacity: .5; }
+#clear-chat {
+  --action-color: var(--delete-action);
+  --action-hover: var(--error-surface);
+}
+.header-action:focus-visible:not(:disabled) {
+  background: var(--action-hover);
+  border-color: var(--action-color);
+  color: var(--action-color);
+}
+.trash-lid { transform-origin: 3px 6px; }
+.trash-lid, .logout-arrow { transition: transform var(--duration-fast) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .header-action:hover:not(:disabled) {
+    background: var(--action-hover);
+    border-color: var(--action-color);
+    color: var(--action-color);
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  #clear-chat:hover:not(:disabled) .trash-lid { transform: translateY(-1px) rotate(-21deg); }
+  #logout:hover:not(:disabled) .logout-arrow { transform: translateX(3px); }
+}
 .clear-dialog { width: min(420px, calc(100vw - 32px)); padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--white); color: var(--ink); }
 .clear-dialog::backdrop { background: rgb(0 0 0 / 38%); }
 .clear-dialog h2 { margin: 0; font-size: 22px; line-height: 1.2; }
@@ -209,11 +249,11 @@ body:has(.chat:not([hidden])) { height: 100vh; height: 100dvh; }
 #confirm-clear { background: var(--error); }
 #confirm-clear:disabled { opacity: .65; }
 @media (max-width: 560px) {
-  #clear-chat { min-width: 44px; padding-inline: 11px; justify-content: center; }
-  #clear-chat span { display: none; }
+  .chat-header-actions { gap: var(--space-2); }
+  .header-action { min-width: 44px; padding-inline: var(--space-2); }
+  .header-action span { display: none; }
 }
 @media (max-width: 380px) {
   .topbar { padding-inline: 12px; gap: 6px; }
-  .chat-header-actions { gap: 2px; }
-  #logout { padding-inline: 6px; }
+  .chat-header-actions { gap: var(--space-1); }
 }

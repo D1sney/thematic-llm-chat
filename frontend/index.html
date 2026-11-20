@@ -33,21 +33,29 @@
     <symbol id="i-thumb-up" viewBox="0 0 24 24"><path d="M7 10v11H3V10Zm0 0 4-7c.6-1 2-.5 2 .7V8h5a2 2 0 0 1 2 2.4l-1.5 8a2 2 0 0 1-2 1.6H7"/></symbol>
     <symbol id="i-thumb-down" viewBox="0 0 24 24"><g transform="rotate(180 12 12)"><use href="#i-thumb-up"/></g></symbol>
     <symbol id="i-feedback" viewBox="0 0 28 24"><g transform="translate(0 0) scale(.65)"><use href="#i-thumb-up"/></g><g transform="translate(12 8) scale(.65)"><use href="#i-thumb-down"/></g></symbol>
-    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 4h4l1 3M6 7l1 13h10l1-13M10 10v7m4-7v7"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
   </svg>
   <header class="topbar">
     <div class="brand"><img src="/assets/favicon.png" alt="" width="32" height="32">Interview AI</div>
     <span id="demo-label" class="demo-label" hidden>Демо</span>
     <div class="chat-header-actions">
+      <button type="button" id="clear-chat" class="header-action" aria-label="Очистить чат" title="Очистить чат" hidden>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="trash-lid" d="M3 6h18M9 6V3h6v3"/>
+          <path d="M5 6l1 15h12l1-15M10 10v7M14 10v7"/>
+        </svg>
+        <span>Очистить чат</span>
+      </button>
+      <button type="button" id="logout" class="header-action" aria-label="Выйти" title="Выйти" hidden>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 4H4v16h5"/>
+          <path class="logout-arrow" d="M9 12h12m-4-4 4 4-4 4"/>
+        </svg>
+        <span>Выйти</span>
+      </button>
       <button type="button" id="theme-toggle" class="icon-button" aria-label="Переключить тему" disabled>
         <svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg>
       </button>
-      <button type="button" id="clear-chat" class="quiet" aria-label="Очистить чат" hidden>
-        <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>
-        <span>Очистить чат</span>
-      </button>
-      <button type="button" id="logout" class="quiet" hidden>Выйти</button>
     </div>
   </header>
 

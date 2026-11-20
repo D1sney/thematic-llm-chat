@@ -114,6 +114,7 @@
   --surface-hover: #e9e8e1; --user-surface: #eceee7;
   --text: #27251e; --text-secondary: #6d6b66; --accent: #016a71; --on-accent: #edfffe;
   --border: #d1d1cd; --input-border: #c3c7bd; --focus: #016a71; --error-surface: #fae9e9;
+  --delete-action: #be283b;
   --shadow-composer: 0 4px 24px -12px rgb(39 37 30 / 18%);
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
   --space-5: 20px; --space-6: 24px; --space-8: 32px;

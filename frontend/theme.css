@@ -29,6 +29,7 @@
   --border: var(--line);
   --input-border: #565656;
   --focus: var(--teal);
+  --delete-action: #f16a73;
   --error-surface: #402d32;
   --shadow-composer: 0 8px 32px -16px rgb(0 0 0 / 36%);
 }
@@ -45,8 +46,6 @@
 :root.theme-reveal::view-transition { pointer-events: none; }
 
 @media (max-width: 380px) {
-  #theme-toggle { width: 36px; }
-  #clear-chat { min-width: 36px; padding-inline: 9px; }
   .topbar:has(.demo-label:not([hidden])) { flex-wrap: wrap; row-gap: 0; }
   .topbar:has(.demo-label:not([hidden])) .demo-label { order: 1; margin: 0 0 5px 31px; padding-block: 1px; }
   .topbar:has(.demo-label:not([hidden])) .chat-header-actions { flex: 1 0 auto; justify-content: flex-end; }
