@@ -24,6 +24,13 @@
   --input-line: #778477;
   --soft: #e5eeea;
   --error: #9b2936;
+  --serif-title: #173e36;
+  --intro-text: #3e5b51;
+  --starter-text: #234c44;
+  --selection: #c2e2db;
+  --on-primary: #fff;
+  --disabled-surface: #e3eae4;
+  --disabled-ink: #52655b;
   --serif: "Cormorant Garamond", Georgia, serif;
   font-family: "Golos Text", system-ui, sans-serif;
   background: var(--paper);
@@ -40,7 +47,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--teal);
   outline-offset: 3px;
 }
-::selection { background: #c2e2db; color: var(--ink); }
+::selection { background: var(--selection); color: var(--ink); }
 
 .topbar {
   min-height: 70px;
@@ -82,8 +89,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   line-height: 0.98;
   margin: 0;
 }
-.introduction h1 { max-width: 480px; font-size: clamp(38px, 5.55vw, 78px); color: #173e36; }
-.introduction p { max-width: 35ch; color: #3e5b51; line-height: 1.58; margin: 18px 0 0; }
+.introduction h1 { max-width: 480px; font-size: clamp(38px, 5.55vw, 78px); color: var(--serif-title); }
+.introduction p { max-width: 35ch; color: var(--intro-text); line-height: 1.58; margin: 18px 0 0; }
 .introduction img {
   display: block;
   width: clamp(168px, 27vw, 332px);
@@ -129,11 +136,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   border-radius: 10px;
   padding: 0 16px;
   background: var(--teal);
-  color: #fff;
+  color: var(--on-primary);
   font-weight: 600;
 }
 .primary:hover:not(:disabled) { background: var(--teal-hover); }
-.primary:disabled { background: #e3eae4; color: #52655b; }
+.primary:disabled { background: var(--disabled-surface); color: var(--disabled-ink); }
 .startup { margin: auto; padding: 24px; text-align: center; color: var(--muted); }
 noscript { margin: auto; }
 
@@ -156,7 +163,7 @@ body:has(.chat:not([hidden])) { height: 100vh; height: 100dvh; }
 .suggestions button {
   background: var(--white);
   border: 1px solid var(--line);
-  color: #234c44;
+  color: var(--starter-text);
   border-radius: 999px;
   min-height: 38px;
   padding: 6px 13px;

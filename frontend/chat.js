@@ -26,6 +26,8 @@ const clearChat = get('clear-chat');
 const clearDialog = get('clear-dialog');
 const historyList = get('history');
 const scroll = get('scroll');
+const jumpToLatest = get('scroll-bottom');
+const summarize = get('interview-summary');
 const starters = document.querySelectorAll('[data-prompt]');
 const keyPattern = /^[A-Za-z0-9_-]{8,255}$/;
 const dateFormat = new Intl.DateTimeFormat('ru-RU', {dateStyle: 'short', timeStyle: 'short'});
@@ -45,6 +47,7 @@ let starterInsertion = null;
 let lastMessage = null;
 let retryAction = null;
 const retryButton = get('retry-button');
+const summaryRequest = 'Подведи итог собеседования. Укажи сильные стороны моих ответов и темы, которые стоит подготовить. Опирайся только на этот диалог. Если ответов ещё не было, скажи об этом.';
 
 function readDraft(key) {
   try { return sessionStorage.getItem(key); } catch { return null; }
@@ -193,6 +196,8 @@ function syncComposer() {
   logout.disabled = sending || switching;
   clearChat.hidden = chatView.hidden;
   clearChat.disabled = busy || voice.active || !lastMessage;
+  summarize.hidden = lastMessage?.role !== 'assistant';
+  summarize.disabled = busy || voice.active;
 }
 
 function messageAction(glyph, label, handler) {
@@ -325,7 +330,24 @@ function startWaiting(requestId, anchor = null) {
 
 function scrollToLatest() {
   scroll.scrollTop = scroll.scrollHeight;
+  updateScrollButton();
 }
+
+function updateScrollButton() {
+  jumpToLatest.hidden = !lastMessage ||
+    scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 100;
+}
+
+scroll.addEventListener('scroll', updateScrollButton, {passive: true});
+new ResizeObserver(updateScrollButton).observe(scroll);
+jumpToLatest.append(createMessageActionHint(jumpToLatest, 'К последнему сообщению', {placement: 'top', messageAction: false}));
+jumpToLatest.addEventListener('click', event => {
+  scrollToLatest();
+  if (event.detail === 0) {
+    const lastAction = historyList.lastElementChild?.querySelector('.copy-button');
+    (lastAction ?? sendButton).focus({preventScroll: true});
+  }
+});
 
 function openLogin(message = '', focus = false) {
   startup.hidden = true;
@@ -554,37 +576,43 @@ composer.addEventListener('submit', async event => {
     await voice.finish(true);
     return;
   }
-  const text = input.value;
-  const restoreFocus = [sendButton, editor].includes(document.activeElement);
+  await sendText(input.value);
+});
+
+summarize.addEventListener('click', () => sendText(summaryRequest, {keepDraft: true}));
+
+async function sendText(text, {keepDraft = false} = {}) {
+  if (sending || switching || editing || voice.active || chatView.hidden) return;
+  const restoreFocus = [sendButton, editor, summarize].includes(document.activeElement);
   const pending = makeEntry({role: 'user', text: text.trim(), created_at: new Date().toISOString()});
   clearChatError();
   sending = true;
   historyList.append(pending);
   const requestId = crypto.randomUUID();
   const stopWaiting = startWaiting(requestId);
-  input.value = '';
+  if (!keepDraft) input.value = '';
   syncComposer();
   scrollToLatest();
   try {
     const turn = await api('messages', {method: 'POST', body: {text, branch_id: branchId, request_id: requestId}});
     pending.replaceWith(makeEntry(turn.user), makeEntry(turn.assistant));
     lastMessage = turn.assistant;
-    writeDraft(`interview-ai:draft:${branchId}`, null);
+    if (!keepDraft) writeDraft(`interview-ai:draft:${branchId}`, null);
     starterInsertion = null;
   } catch (error) {
     pending.remove();
-    input.value = text;
-    showChatError(error, () => composer.requestSubmit());
+    if (!keepDraft) input.value = text;
+    showChatError(error, keepDraft ? () => sendText(text, {keepDraft}) : () => composer.requestSubmit());
   } finally {
     stopWaiting();
     sending = false;
     syncComposer();
     scrollToLatest();
-    if (restoreFocus && !chatView.hidden && [document.body, sendButton].includes(document.activeElement)) {
+    if (restoreFocus && !chatView.hidden && [document.body, sendButton, summarize].includes(document.activeElement)) {
       input.focus({preventScroll: true});
     }
   }
-});
+}
 
 function showStartupError(error) {
   loginView.hidden = true;
