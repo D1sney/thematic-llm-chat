@@ -71,7 +71,10 @@ export function createMessageActionHint(button, label, {
       show(warm ? 0 : ACTION_HINT_DELAY, true);
     }
   });
-  button.addEventListener('focusin', () => { if (button.matches(':focus-visible') || button.querySelector(':focus-visible')) show(); });
+  // Native popovers can restore focus while still closing.
+  button.addEventListener('focusin', () => queueMicrotask(() => {
+    if (button.matches(':focus-visible') || button.querySelector(':focus-visible')) show();
+  }));
   button.addEventListener('pointerleave', hideMessageActionHint);
   for (const event of ['focusout', 'click']) button.addEventListener(event, resetMessageActionHints);
   return hint;

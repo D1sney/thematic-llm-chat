@@ -46,7 +46,7 @@
 .message-action-hint:popover-open { visibility: visible; opacity: 1; }
 .message-timestamp { flex-shrink: 0; margin-left: 8px; color: var(--text-secondary); font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums; white-space: nowrap; opacity: 0; transition: opacity var(--duration-fast) ease; }
 .message-user .message-timestamp { margin-left: 0; margin-right: 8px; }
-.message:is(:hover, :focus-within) .message-timestamp { opacity: 1; }
+.message:hover .message-timestamp, .message:has(:focus-visible) .message-timestamp { opacity: 1; }
 @media (hover: none), (pointer: coarse) {
   .message-timestamp { opacity: 1; }
 }
@@ -190,3 +190,11 @@
   .t-shimmer::before { animation: none !important; }
 }
 #error-banner:has(#message-error:empty) { display: none; }
+
+.feedback-control { display: flex; flex-shrink: 0; }
+.message-actions .feedback-trigger .icon { width: 20px; height: 20px; }
+.feedback-trigger.has-feedback { color: var(--accent); }
+.feedback-menu { position: fixed; inset: auto; margin: 0; min-width: 196px; max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px); overflow: auto; padding: 4px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); }
+.feedback-option { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 12px; border: 0; border-radius: 4px; background: transparent; color: inherit; font-size: 13px; text-align: left; }
+.feedback-option:is(:hover, :focus-visible) { background: var(--surface-hover); }
+.feedback-option[aria-checked="true"] { color: var(--accent); }

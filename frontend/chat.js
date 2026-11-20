@@ -2,6 +2,7 @@ import { createAnswerSuggestions } from './answer-suggestions.js';
 import { createMarkdownInput } from './markdown-input.js';
 import { createVoiceInput } from './voice-input.js';
 import { createIconSwap } from './motion.js';
+import { createMessageFeedback } from './message-feedback.js';
 import { createMessageEditor } from './message-edit.js';
 import { createMessageActionHint, node, uiIcon } from './message-actions.js';
 import { marked } from './vendor/marked.js';
@@ -21,6 +22,8 @@ const messageError = get('message-error');
 const loginButton = get('login-button');
 const sendButton = get('send-button');
 const logout = get('logout');
+const clearChat = get('clear-chat');
+const clearDialog = get('clear-dialog');
 const historyList = get('history');
 const scroll = get('scroll');
 const starters = document.querySelectorAll('[data-prompt]');
@@ -51,6 +54,16 @@ function writeDraft(key, value) {
   try {
     if (value) sessionStorage.setItem(key, value);
     else sessionStorage.removeItem(key);
+  } catch { /* The editor works without browser storage. */ }
+}
+
+function clearDrafts() {
+  try {
+    for (const key of Object.keys(sessionStorage)) {
+      if (key.startsWith('interview-ai:draft:') || key.startsWith('interview-ai:answer-insertion:')) {
+        sessionStorage.removeItem(key);
+      }
+    }
   } catch { /* The editor works without browser storage. */ }
 }
 
@@ -178,6 +191,8 @@ function syncComposer() {
   for (const button of starters) button.disabled = busy || voice.active;
   get('welcome').hidden = historyList.childElementCount > 0;
   logout.disabled = sending || switching;
+  clearChat.hidden = chatView.hidden;
+  clearChat.disabled = busy || voice.active || !lastMessage;
 }
 
 function messageAction(glyph, label, handler) {
@@ -211,35 +226,6 @@ function makeCopy(text) {
     }
   });
   return button;
-}
-
-function addFeedback(actions, message, rating) {
-  let selected = rating ?? null;
-  let pending = false;
-  const choices = [
-    ['good', 'thumb-up', 'Хороший ответ'],
-    ['bad', 'thumb-down', 'Плохой ответ'],
-  ];
-  const buttons = choices.map(([value, glyph, label]) => {
-    const button = messageAction(glyph, label, async () => {
-      if (pending) return;
-      pending = true;
-      const next = selected === value ? null : value;
-      try {
-        await api(`messages/${message.id}/feedback`, { method: 'PUT', body: { rating: next } });
-        selected = next;
-        buttons.forEach(([choice, control]) => control.setAttribute('aria-pressed', String(choice === next)));
-        announce(next ? 'Оценка сохранена' : 'Оценка снята');
-      } catch (error) {
-        showChatError(error);
-      } finally {
-        pending = false;
-      }
-    });
-    button.setAttribute('aria-pressed', String(selected === value));
-    return [value, button];
-  });
-  actions.append(...buttons.map(([, button]) => button));
 }
 
 function addVersions(actions, versions, currentId) {
@@ -281,7 +267,13 @@ function makeEntry(message, versions = [], rating = null) {
     const edit = messageAction('edit', 'Изменить сообщение', () => editMessage(message, article, edit));
     actions.append(edit);
   } else if (message.id !== undefined) {
-    addFeedback(actions, message, rating);
+    const messageBranch = branchId;
+    actions.append(createMessageFeedback(rating, {
+      save: value => api(`messages/${message.id}/feedback?branch_id=${messageBranch}`, {
+        method: 'PUT', body: {rating: value},
+      }),
+      onError: showChatError, announce,
+    }));
   }
   if (!isUser) actions.append(time);
   article.append(content, actions);
@@ -339,6 +331,7 @@ function openLogin(message = '', focus = false) {
   startup.hidden = true;
   chatView.hidden = true;
   logout.hidden = true;
+  clearChat.hidden = true;
   get('demo-label').hidden = true;
   historyList.replaceChildren();
   editing = null;
@@ -458,6 +451,49 @@ loginForm.addEventListener('submit', async event => {
   } finally {
     loggingIn = false;
     syncLogin();
+  }
+});
+
+clearChat.addEventListener('click', () => {
+  get('clear-error').textContent = '';
+  clearDialog.showModal();
+});
+get('cancel-clear').addEventListener('click', () => clearDialog.close());
+clearDialog.addEventListener('cancel', event => { if (switching) event.preventDefault(); });
+get('clear-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (switching) return;
+  const confirm = get('confirm-clear');
+  const cancel = get('cancel-clear');
+  const errorTarget = get('clear-error');
+  switching = true;
+  confirm.disabled = cancel.disabled = true;
+  errorTarget.textContent = '';
+  syncComposer();
+  let cleared = false;
+  try {
+    const data = await api(`messages?branch_id=${branchId}`, {method: 'DELETE'});
+    clearDrafts();
+    clearChatError();
+    renderHistory(data);
+    clearDialog.close();
+    announce('Общий чат очищен');
+    cleared = true;
+  } catch (error) {
+    if (error.status === 401) {
+      clearDialog.close();
+      showChatError(error);
+    } else if (error.status === 409) {
+      clearDialog.close();
+      showChatError(error);
+    } else {
+      errorTarget.textContent = errorText(error);
+    }
+  } finally {
+    switching = false;
+    confirm.disabled = cancel.disabled = false;
+    syncComposer();
+    if (cleared) input.focus({preventScroll: true});
   }
 });
 

@@ -342,3 +342,57 @@ def test_provider_retry_budget(monkeypatch, codes, expected_retries):
         asyncio.run(generate())
     assert attempts == codes
     assert retries == expected_retries
+
+
+def test_clear_shared_chat_removes_versions_and_keeps_sessions(tmp_path):
+    config = settings(tmp_path)
+    with TestClient(create_app(config, model=FakeModel())) as client:
+        assert client.delete("/api/v1/messages?branch_id=1").status_code == 401
+        login(client)
+        first = client.post("/api/v1/messages", json={"text": "Старая реплика"}).json()
+        assistant = first["assistant"]["id"]
+        user = first["user"]["id"]
+        assert (
+            client.put(
+                f"/api/v1/messages/{assistant}/feedback", json={"rating": "good"}
+            ).status_code
+            == 204
+        )
+        edit = client.put(f"/api/v1/messages/{user}", json={"text": "Ветка"}).json()
+        branch = edit["branch_id"]
+        old_token = client.cookies["interview_session"]
+        client.cookies.clear()
+        login(client)
+        assert client.cookies["interview_session"] != old_token
+        assert client.get("/api/v1/messages").json() == edit
+        assert client.delete("/api/v1/messages?branch_id=1").status_code == 409
+        cleared = client.delete(f"/api/v1/messages?branch_id={branch}").json()
+        assert cleared["branch_id"] > branch
+        assert (
+            cleared["messages"] == []
+            and cleared["versions"] == {}
+            and cleared["ratings"] == {}
+        )
+        assert client.post("/api/v1/branches/1").status_code == 404
+        assert client.post(f"/api/v1/branches/{branch}").status_code == 404
+        assert (
+            client.post(
+                "/api/v1/messages",
+                json={"text": "Старый черновик", "branch_id": branch},
+            ).status_code
+            == 409
+        )
+        assert (
+            client.put(
+                f"/api/v1/messages/{assistant}/feedback?branch_id={branch}",
+                json={"rating": "bad"},
+            ).status_code
+            == 409
+        )
+        client.cookies.clear()
+        client.cookies.set("interview_session", old_token)
+        assert client.get("/api/v1/messages").json() == cleared
+
+    with TestClient(create_app(config, model=FakeModel())) as restarted:
+        login(restarted)
+        assert restarted.get("/api/v1/messages").json() == cleared

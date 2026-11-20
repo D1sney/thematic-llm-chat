@@ -192,6 +192,20 @@ class Store:
             await db.commit()
             return found
 
+    async def clear_history(self) -> None:
+        async with connect(self.path) as db:
+            [(new_branch,)] = await db.execute_fetchall(
+                "INSERT INTO branches DEFAULT VALUES RETURNING id"
+            )
+            await db.execute("DELETE FROM reply_suggestions")
+            await db.execute("DELETE FROM message_feedback")
+            await db.execute("DELETE FROM message_versions")
+            await db.execute("DELETE FROM branch_messages")
+            await db.execute("DELETE FROM messages")
+            await db.execute("UPDATE active_branch SET branch_id = ?", (new_branch,))
+            await db.execute("DELETE FROM branches WHERE id <> ?", (new_branch,))
+            await db.commit()
+
     async def save_rating(self, message_id: int, rating: str | None):
         async with connect(self.path) as db:
             rows = await db.execute_fetchall(

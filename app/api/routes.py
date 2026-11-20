@@ -76,6 +76,14 @@ async def history(request: Request) -> History:
     )
 
 
+@router.delete("/messages", dependencies=[Depends(require_session)])
+async def clear_history(branch_id: int, request: Request) -> History:
+    async with exclusive_turn(request):
+        await require_branch(request, branch_id)
+        await request.app.state.store.clear_history()
+        return await history(request)
+
+
 @router.post("/messages", status_code=201, dependencies=[Depends(require_session)])
 async def send_message(body: ChatInput, request: Request) -> Turn:
     async with exclusive_turn(request, body.request_id) as request_id:
@@ -93,9 +101,7 @@ async def generate_turn(
     body: ChatInput, request: Request, request_id: str, *, edit_id: int | None = None
 ) -> Turn:
     state = request.app.state
-    branch_id = await state.store.active_branch()
-    if body.branch_id is not None and body.branch_id != branch_id:
-        raise HTTPException(409, "Версия диалога изменилась. Обновите страницу.")
+    branch_id = await require_branch(request, body.branch_id)
     if edit_id is not None:
         messages = await state.store.history(branch_id)
         if not any(
@@ -115,6 +121,13 @@ async def generate_turn(
     return await state.store.save_turn(
         branch_id, body.text, user_time, reply, edit_id=edit_id
     )
+
+
+async def require_branch(request: Request, expected: int | None) -> int:
+    current = await request.app.state.store.active_branch()
+    if expected is not None and expected != current:
+        raise HTTPException(409, "Диалог изменился. Обновите историю.")
+    return current
 
 
 @asynccontextmanager
@@ -147,6 +160,10 @@ async def switch_branch(branch_id: int, request: Request) -> History:
     status_code=204,
     dependencies=[Depends(require_session)],
 )
-async def feedback(message_id: int, body: Feedback, request: Request):
-    if not await request.app.state.store.save_rating(message_id, body.rating):
-        raise HTTPException(404, "Сообщение не найдено.")
+async def feedback(
+    message_id: int, body: Feedback, request: Request, branch_id: int | None = None
+):
+    async with exclusive_turn(request):
+        await require_branch(request, branch_id)
+        if not await request.app.state.store.save_rating(message_id, body.rating):
+            raise HTTPException(404, "Сообщение не найдено.")
