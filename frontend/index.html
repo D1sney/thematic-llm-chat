@@ -4,15 +4,33 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#faf8f5">
-  <meta name="description" content="Репетиция — тренажёр собеседований с вопросами под вашу роль и разбором ответов.">
-  <title>Репетиция — тренажёр собеседований</title>
+  <meta name="description" content="Interview AI — тренажёр собеседований с вопросами под вашу роль и разбором ответов.">
+  <title>Interview AI — тренажёр собеседований</title>
   <link rel="icon" href="/assets/favicon.png" type="image/png">
   <link rel="stylesheet" href="/styles.css">
-  <script src="/chat.js" defer></script>
+  <link rel="stylesheet" href="/chat.css">
+  <link rel="stylesheet" href="/answer-suggestions.css">
+  <link rel="stylesheet" href="/voice-input.css">
+  <script src="/chat.js" type="module"></script>
 </head>
 <body>
+  <svg class="icon-sprite" aria-hidden="true" width="0" height="0">
+    <symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 5-7 7 7 7M5 12h14"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="m12 5 7 7-7 7M5 12h14"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 5v14"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m15 5 4 4M4 20l4-1L20 7a3 3 0 0 0-4-4L4 15Z"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4H4v12h4"/></symbol>
+    <symbol id="i-microphone" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-thumb-up" viewBox="0 0 24 24"><path d="M7 10v11H3V10Zm0 0 4-7c.6-1 2-.5 2 .7V8h5a2 2 0 0 1 2 2.4l-1.5 8a2 2 0 0 1-2 1.6H7"/></symbol>
+    <symbol id="i-thumb-down" viewBox="0 0 24 24"><g transform="rotate(180 12 12)"><use href="#i-thumb-up"/></g></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  </svg>
   <header class="topbar">
-    <div class="brand"><img src="/assets/favicon.png" alt="" width="32" height="32">Репетиция</div>
+    <div class="brand"><img src="/assets/favicon.png" alt="" width="32" height="32">Interview AI</div>
     <span id="demo-label" class="demo-label" hidden>Демо</span>
     <button type="button" id="logout" class="quiet" hidden>Выйти</button>
   </header>
@@ -22,10 +40,7 @@
       <div class="introduction">
         <h1>Тренажёр<br>собеседований</h1>
         <p>Выберите роль, ответьте на вопросы интервьюера и узнайте, что можно улучшить.</p>
-        <figure class="interview-example">
-          <figcaption>Пример вопроса</figcaption>
-          <blockquote>Как вы действовали, когда сорвался срок?</blockquote>
-        </figure>
+        <img src="/assets/bear.png" width="590" height="620" alt="">
       </div>
       <div class="login-panel">
         <form id="login-form" novalidate>
@@ -34,8 +49,10 @@
           <input id="access-key" type="password" autocomplete="current-password"
                  autocapitalize="off" spellcheck="false" required
                  aria-describedby="key-hint login-error">
-          <p id="key-hint" class="hint">8–255 символов. Латинские буквы, цифры, дефис и подчёркивание.</p>
-          <p id="login-error" class="error" role="alert"></p>
+          <div class="key-feedback">
+            <p id="key-hint">8–255 символов. Латинские буквы, цифры, дефис и подчёркивание.</p>
+            <p id="login-error" class="key-error" role="alert"></p>
+          </div>
           <button type="submit" class="primary" id="login-button" disabled>Войти</button>
         </form>
       </div>
@@ -52,27 +69,42 @@
             <button type="button" data-prompt="Хочу разобрать свой ответ на вопрос с собеседования.">Разобрать мой ответ</button>
           </div>
         </div>
-        <ol id="history" class="measure messages" aria-label="История сообщений" aria-live="polite"></ol>
+        <div id="history" class="messages" role="log" aria-label="История сообщений" aria-live="polite" aria-relevant="additions"></div>
       </div>
 
-      <form id="message-form" class="composer measure" novalidate>
-        <p id="message-error" class="error" role="alert"></p>
-        <p id="waiting" class="waiting" role="status"></p>
-        <div class="compose-box">
-          <label for="message" class="visually-hidden">Сообщение</label>
-          <textarea id="message" rows="2" placeholder="Напишите интервьюеру…"
-                    required aria-describedby="message-count message-error"></textarea>
-          <div class="compose-actions">
-            <span id="message-count" class="hint">0 / 500</span>
-            <button type="submit" class="primary send" id="send-button" disabled aria-label="Отправить">
-              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 19V5m-6 6 6-6 6 6"/>
-              </svg>
-            </button>
-          </div>
+      <div class="composer-region">
+        <div id="error-banner" class="error-banner" role="alert">
+          <span id="message-error"></span>
+          <button id="retry-button" class="text-button" type="button" hidden>Повторить</button>
         </div>
-      </form>
+        <div id="answer-suggestions" class="answer-suggestions" role="group" aria-label="Варианты ответа" hidden></div>
+        <form id="composer" class="composer">
+          <label class="sr-only" for="message-input">Сообщение</label>
+          <div class="composer-input">
+            <textarea id="message-input" rows="1" maxlength="500" placeholder="Напишите интервьюеру…"
+                      aria-describedby="input-status message-error"></textarea>
+            <span class="editor-placeholder" aria-hidden="true">Напишите интервьюеру…</span>
+          </div>
+          <div id="voice-recording" class="voice-recording" hidden>
+            <button id="voice-cancel" class="voice-control icon-button" type="button" aria-label="Отменить запись"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+            <span id="voice-status" class="voice-status sr-only" role="status">Записываю</span>
+            <canvas class="voice-wave" aria-hidden="true"></canvas>
+            <span id="voice-time" class="voice-time" aria-hidden="true">0:00</span>
+            <button id="voice-retry" class="text-button" type="button" hidden>Повторить</button>
+          </div>
+          <div id="voice-error" class="voice-error" role="alert" popover="manual" hidden><span id="voice-error-text"></span><button id="voice-error-close" class="icon-button" type="button" aria-label="Закрыть ошибку микрофона"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button></div>
+          <div class="composer-toolbar">
+            <div class="composer-options">
+              <span id="input-status" class="input-status"></span>
+            </div>
+            <div class="composer-send-actions">
+              <button id="voice-start" class="voice-control icon-button" type="button" aria-label="Записать голосом" disabled><svg class="icon" aria-hidden="true"><use href="#i-microphone"/></svg></button>
+              <button id="voice-stop" class="voice-control voice-stop icon-button" type="button" aria-label="Остановить и вернуть текст" hidden><svg class="icon" aria-hidden="true"><use href="#i-stop"/></svg></button>
+              <button id="send-button" class="send-button" type="submit" aria-label="Отправить сообщение" disabled><svg class="icon" aria-hidden="true"><use href="#i-arrow-up"/></svg></button>
+            </div>
+          </div>
+        </form>
+      </div>
     </section>
 
     <div id="startup" class="startup">
@@ -82,13 +114,6 @@
     <noscript>Для работы тренажёра включите JavaScript.</noscript>
   </main>
 
-  <template id="message-template">
-    <li class="entry">
-      <article>
-        <header><span class="sender"></span><time></time></header>
-        <p class="message-text"></p>
-      </article>
-    </li>
-  </template>
+  <p id="chat-announcement" class="sr-only" role="status"></p>
 </body>
 </html>

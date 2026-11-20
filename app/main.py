@@ -1,4 +1,3 @@
-import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -9,8 +8,9 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
+from app.api.voice import router as voice_router
 from app.config import Settings, get_settings
-from app.services.model import ChatModel, DemoModel, Gemini
+from app.services.model import ChatModel, DemoModel, PolzaChat
 from app.storage import Store
 
 FRONTEND = Path(__file__).resolve().parents[1] / "frontend"
@@ -25,22 +25,23 @@ def create_app(
     async def lifespan(app: FastAPI):
         app.state.store = Store(settings.history_path)
         await app.state.store.initialize()
-        app.state.turn_lock = asyncio.Lock()
         async with httpx.AsyncClient(timeout=30) as client:
+            app.state.http = client
+            app.state.voice_requests = {}
             app.state.model = model
             if model is None:
                 app.state.model = (
                     DemoModel()
                     if settings.demo_mode
-                    else Gemini(
+                    else PolzaChat(
                         client,
-                        settings.gemini_api_key.get_secret_value(),
-                        settings.gemini_model,
+                        settings.polza_ai_api_key.get_secret_value(),
+                        settings.polza_ai_model,
                     )
                 )
             yield
 
-    app = FastAPI(title="Репетиция", lifespan=lifespan)
+    app = FastAPI(title="Interview AI", lifespan=lifespan)
     app.state.settings = settings
 
     @app.middleware("http")
@@ -69,5 +70,6 @@ def create_app(
         return {"status": "ok"}
 
     app.include_router(router)
+    app.include_router(voice_router)
     app.mount("/", StaticFiles(directory=FRONTEND, html=True), name="frontend")
     return app

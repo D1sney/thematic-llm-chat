@@ -1,0 +1,27 @@
+.answer-suggestions { position: relative; min-width: 0; margin-bottom: var(--space-3); }
+.answer-suggestions-viewport { overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; scroll-padding-inline: 40px; mask-image: linear-gradient(to right, transparent 32px, #000 56px, #000 calc(100% - 56px), transparent calc(100% - 32px)); }
+.answer-suggestions-viewport::-webkit-scrollbar { display: none; }
+.answer-suggestions[data-start='true'] .answer-suggestions-viewport { mask-image: linear-gradient(to right, #000, #000 calc(100% - 56px), transparent calc(100% - 32px)); }
+.answer-suggestions[data-end='true'] .answer-suggestions-viewport { mask-image: linear-gradient(to right, transparent 32px, #000 56px, #000); }
+.answer-suggestions[data-start='true'][data-end='true'] .answer-suggestions-viewport { mask-image: none; }
+.answer-suggestions-rail { display: flex; gap: var(--space-2); width: max-content; padding: 4px; }
+.answer-suggestions-rail button { flex-shrink: 0; white-space: nowrap; min-height: 36px; padding: 7px 12px; border: 1px solid var(--border); border-radius: var(--radius-small); background: var(--surface); color: var(--text); font: inherit; font-size: 13px; line-height: 1.5; transition: background var(--duration-fast) ease, border-color var(--duration-fast) ease; }
+.answer-suggestions-rail button:hover:not(:disabled) { background: var(--surface-hover); }
+.answer-suggestions-rail button[aria-pressed='true'] { border-color: var(--accent); color: var(--accent); }
+.answer-suggestions button:focus-visible { outline-offset: 1px; }
+.answer-suggestions button:disabled { opacity: .5; }
+.answer-suggestions-nav { position: absolute; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 32px; height: 36px; padding: 8px; border: 0; border-radius: var(--radius-small); background: transparent; color: var(--text-secondary); transition: color var(--duration-fast) ease; }
+.answer-suggestions-nav .icon { width: 16px; height: 16px; }
+.answer-suggestions-nav:hover:not([aria-disabled='true']) { color: var(--text); }
+.answer-suggestions-nav[aria-disabled='true'] { opacity: .5; }
+.answer-suggestions-previous { left: 0; }
+.answer-suggestions-next { right: 0; }
+.answer-draft-mirror { position: absolute; inset: 0 auto 0 0; overflow: hidden; pointer-events: none; font-size: 16px; line-height: 1.6; color: var(--text); }
+.answer-draft-mirror > div { padding: 0 var(--space-1); white-space: pre-wrap; overflow-wrap: break-word; }
+.answer-draft-mirror mark { color: var(--accent); background: transparent; }
+.composer textarea.has-answer-insertion { color: transparent; }
+@media (max-width: 760px), (pointer: coarse) {
+  .answer-suggestions-rail button { min-height: 44px; }
+  .answer-suggestions-nav { width: 44px; height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .answer-suggestions button { transition: none; } }

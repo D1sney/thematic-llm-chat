@@ -1,0 +1,34 @@
+.composer-send-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+.voice-control { width: 36px; height: 36px; flex-shrink: 0; color: var(--text-secondary); border-radius: var(--radius-small); }
+.voice-control:disabled { opacity: .5; cursor: default; }
+.voice-control:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.voice-stop { color: var(--text); background: var(--surface-hover); }
+.voice-recording { display: flex; align-items: center; gap: var(--space-3); min-height: 36px; }
+.voice-wave { flex: 1; display: block; width: 0; min-width: 24px; height: 28px; color: var(--accent); }
+.voice-time { display: none; }
+.voice-status:not(.sr-only) { color: var(--text-secondary); font-size: 14px; min-width: 0; }
+.voice-error { margin: var(--space-2) var(--space-1) 0; font-size: 12px; line-height: 1.5; color: var(--error); }
+.composer[data-voice]:not([data-voice='idle']) .composer-input { display: none; }
+.composer[data-voice='transcribing'] .voice-wave, .composer[data-voice='requesting'] .voice-wave { opacity: .45; }
+.composer[data-voice='error'] .voice-wave { opacity: .3; }
+.composer[data-voice]:not([data-voice='idle']) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-composer); }
+.composer[data-voice]:not([data-voice='idle']) .voice-recording { grid-area: 1 / 1; min-width: 0; min-height: 44px; }
+.composer[data-voice]:not([data-voice='idle']) .composer-toolbar { grid-area: 1 / 2; margin: 0; }
+.composer[data-voice]:not([data-voice='idle']) .composer-options { display: none; }
+.composer[data-voice]:not([data-voice='idle']) .voice-error { grid-column: 1 / -1; margin: 0 var(--space-2) var(--space-1); }
+.composer[data-voice]:not([data-voice='idle']) .voice-control { width: 44px; height: 44px; border: 0; border-radius: var(--radius-small); }
+.voice-stop .t-icon-swap { --icon-swap-dur: 180ms; --icon-swap-start-scale: .85; --icon-swap-blur: 0px; --icon-swap-ease: var(--ease-out); }
+.voice-stop .t-icon-swap[data-instant] .t-icon { transition: none !important; }
+.composer[data-voice]:not([data-voice='idle']) .voice-status:not(.sr-only) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.composer[data-voice-folding] { overflow: hidden; }
+@media (max-width: 760px) {
+  .voice-control { width: 44px; height: 44px; }
+  .composer-send-actions { gap: var(--space-1); }
+}
+
+/* Errors live above the composer in the top layer, never in its layout. */
+#voice-error { position: fixed; inset: auto; margin: 0; box-sizing: border-box; padding: var(--space-3) var(--space-4); border: 1px solid color-mix(in srgb, var(--error) 25%, var(--border)); border-radius: var(--radius-small); background: var(--error-surface); color: var(--error); box-shadow: 0 8px 24px -12px rgb(0 0 0 / 30%); font-size: 13px; line-height: 1.5; }
+#voice-error:popover-open { display: flex; align-items: start; gap: var(--space-3); }
+#voice-error-text { flex: 1; min-width: 0; }
+#voice-error .icon-button { width: 28px; height: 28px; margin: -4px -6px -4px 0; color: inherit; }
+#voice-error .icon { width: 16px; height: 16px; }

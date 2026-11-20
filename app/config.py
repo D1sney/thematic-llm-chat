@@ -16,9 +16,12 @@ class Settings(BaseSettings):
     )
 
     access_key: SecretStr
-    gemini_api_key: SecretStr | None = None
-    gemini_model: str = Field(default="gemini-4-hydrogen", pattern=r"^[A-Za-z0-9_.-]+$")
+    polza_ai_api_key: SecretStr | None = None
+    polza_ai_model: str = "openai/gpt-6-luna"
+    polza_stt_model: str = "openai/gpt-4o-mini-transcribe"
     database_path: Path | None = None
+    database_url: SecretStr | None = None
+    vercel: bool = False
     demo_mode: bool = False
     secure_cookie: bool = False
     session_ttl_seconds: int = Field(default=86400, gt=0)
@@ -39,16 +42,20 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def require_provider_key(self):
+        if self.vercel and not self.database_url:
+            raise ValueError("Для Vercel настройте постоянную базу через DATABASE_URL.")
         if not self.demo_mode and not (
-            self.gemini_api_key and self.gemini_api_key.get_secret_value().strip()
+            self.polza_ai_api_key and self.polza_ai_api_key.get_secret_value().strip()
         ):
             raise ValueError(
-                "Укажите GEMINI_API_KEY или включите DEMO_MODE для локального просмотра."
+                "Укажите POLZA_AI_API_KEY или включите DEMO_MODE для локального просмотра."
             )
         return self
 
     @property
-    def history_path(self) -> Path:
+    def history_path(self) -> Path | str:
+        if self.database_url and not self.demo_mode:
+            return self.database_url.get_secret_value()
         if self.database_path is not None:
             return self.database_path
         return Path("data/demo.sqlite3" if self.demo_mode else "data/chat.sqlite3")
