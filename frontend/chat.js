@@ -298,17 +298,41 @@ function renderHistory({messages, demo: isDemo, branch_id, versions, ratings}) {
   syncComposer();
 }
 
+function createWaitingOrb() {
+  const orb = node('span', 'waiting-orb');
+  orb.setAttribute('aria-hidden', 'true');
+  const sphere = node('span', 'waiting-orb-sphere');
+  const addDot = (latitude, longitude) => {
+    const dot = node('span', 'waiting-orb-dot');
+    const ring = .37 * Math.cos(latitude);
+    const x = ring * Math.sin(longitude);
+    const y = .37 * Math.sin(latitude);
+    const z = ring * Math.cos(longitude);
+    dot.style.transform = `translate3d(${x.toFixed(3)}em, ${y.toFixed(3)}em, ${z.toFixed(3)}em) rotateY(${longitude}rad) rotateX(${-latitude}rad)`;
+    sphere.append(dot);
+  };
+  addDot(-Math.PI / 2, 0);
+  for (let meridian = 0; meridian < 6; meridian++) {
+    for (let parallel = -2; parallel <= 2; parallel++) {
+      addDot(parallel * Math.PI / 6, meridian * Math.PI / 3);
+    }
+  }
+  addDot(Math.PI / 2, 0);
+  orb.append(sphere);
+  return orb;
+}
+
 function startWaiting(requestId, anchor = null) {
   const waiting = node('div', 'waiting');
   waiting.setAttribute('role', 'status');
   const label = node('span', 't-shimmer');
   label.setAttribute('aria-hidden', 'true');
-  waiting.append(label);
+  waiting.append(label, createWaitingOrb());
   let timer;
   let active = true;
   let shown = 0;
   const setLabel = count => {
-    const text = count ? `Повторная попытка · ${count}/2` : 'Обдумываю ваш ответ…';
+    const text = count ? `Повторная попытка · ${count}/2` : 'Обдумываю ваш ответ';
     waiting.setAttribute('aria-label', text);
     label.textContent = label.dataset.text = text;
   };

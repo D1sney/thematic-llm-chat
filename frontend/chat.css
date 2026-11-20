@@ -152,7 +152,40 @@
 .message-edit:has(.message-edit-fields:disabled) { opacity: .7; }
 
 :root { --shimmer-base: var(--text-secondary); --shimmer-highlight: var(--text); --shimmer-band: 200%; --shimmer-dur: 1.8s; --shimmer-ease: linear; }
-.messages .waiting { display: flex; align-items: center; gap: var(--space-3); color: var(--text-secondary); font-size: 14px; min-height: 40px; margin: 0; }
+.messages .waiting { display: flex; align-items: center; gap: .38em; color: var(--text-secondary); font-size: 14px; min-height: 40px; margin: 0; }
+.waiting-orb {
+  display: inline-block;
+  flex: 0 0 1em;
+  width: 1em;
+  height: 1em;
+  perspective: 3em;
+  color: var(--text);
+}
+.waiting-orb-sphere {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateZ(-22deg) rotateX(16deg) rotateY(18deg);
+}
+.waiting-orb-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: .09em;
+  height: .09em;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: currentColor;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .waiting-orb-sphere { animation: waiting-orb-spin 2.4s linear infinite; }
+}
+@keyframes waiting-orb-spin {
+  from { transform: rotateZ(-22deg) rotateX(16deg) rotateY(18deg); }
+  to { transform: rotateZ(-22deg) rotateX(16deg) rotateY(378deg); }
+}
 .error-banner { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); color: var(--error); background: var(--error-surface); font-size: 13px; padding: var(--space-3) var(--space-4); margin-bottom: var(--space-3); border-radius: var(--radius-small); }
 .error-banner .text-button { flex-shrink: 0; }
 .t-shimmer {
