@@ -396,3 +396,75 @@ def test_clear_shared_chat_removes_versions_and_keeps_sessions(tmp_path):
     with TestClient(create_app(config, model=FakeModel())) as restarted:
         login(restarted)
         assert restarted.get("/api/v1/messages").json() == cleared
+
+
+def test_login_limit_persists_and_resets_after_cooldown(tmp_path, monkeypatch):
+    from app.api import routes
+
+    clock = 10_000.0
+    monkeypatch.setattr(routes, "time", lambda: clock)
+    config = settings(tmp_path)
+    address = ("192.0.2.10", 1234)
+    with TestClient(create_app(config), client=address) as client:
+        for index in range(5):
+            result = client.post(
+                "/api/v1/session",
+                json={"key": "incorrect-key"},
+                headers={"x-forwarded-for": f"198.51.100.{index}"},
+            )
+            assert result.status_code == (429 if index == 4 else 401)
+            assert not result.cookies
+        assert result.headers["retry-after"] == "600"
+
+    with (
+        TestClient(create_app(config), client=address) as first,
+        TestClient(create_app(config), client=("192.0.2.11", 1234)) as second,
+    ):
+        clock += 45
+        denied = login(first)
+        assert denied.status_code == 429
+        assert denied.headers["retry-after"] == "555"
+        assert login(second).status_code == 204
+        clock += 555
+        assert login(first).status_code == 204
+        assert (
+            first.post("/api/v1/session", json={"key": "incorrect-key"}).status_code
+            == 401
+        )
+
+
+def test_successful_login_resets_incomplete_attempt_count(tmp_path):
+    with TestClient(create_app(settings(tmp_path))) as client:
+        for _ in range(4):
+            assert (
+                client.post(
+                    "/api/v1/session", json={"key": "incorrect-key"}
+                ).status_code
+                == 401
+            )
+        assert login(client).status_code == 204
+        assert (
+            client.post("/api/v1/session", json={"key": "incorrect-key"}).status_code
+            == 401
+        )
+
+
+def test_login_budget_is_atomic_across_connections(tmp_path):
+    from app.storage import Store
+
+    async def reserve():
+        store = Store(tmp_path / "throttle.sqlite3")
+        await store.initialize()
+        return await asyncio.gather(
+            *(store.reserve_login_attempt("test-bucket", 100, 700, 5) for _ in range(8))
+        )
+
+    results = asyncio.run(reserve())
+    assert sorted(attempt for attempt, _ in results if attempt is not None) == [
+        1,
+        2,
+        3,
+        4,
+        5,
+    ]
+    assert all(until == 700 for _, until in results)

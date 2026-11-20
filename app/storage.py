@@ -37,6 +37,12 @@ class Store:
                     token_hash TEXT PRIMARY KEY,
                     expires_at DOUBLE PRECISION NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS login_attempts (
+                    client_hash TEXT PRIMARY KEY,
+                    attempts INTEGER NOT NULL,
+                    expires_at DOUBLE PRECISION NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS login_attempts_expiry ON login_attempts(expires_at);
                 CREATE TABLE IF NOT EXISTS branches ({branch_pk});
                 CREATE TABLE IF NOT EXISTS branch_messages (
                     branch_id INTEGER NOT NULL,
@@ -282,7 +288,11 @@ class Store:
         return Message(id=message_id, role=role, text=text, created_at=created_at)
 
     async def save_session(
-        self, token_hash: str, expires_at: float, previous_hash: str | None
+        self,
+        token_hash: str,
+        expires_at: float,
+        previous_hash: str | None,
+        client_hash: str,
     ):
         async with connect(self.path) as db:
             await db.execute(
@@ -293,7 +303,44 @@ class Store:
                 "INSERT INTO sessions (token_hash, expires_at) VALUES (?, ?)",
                 (token_hash, expires_at),
             )
+            await db.execute(
+                "DELETE FROM login_attempts WHERE client_hash = ?", (client_hash,)
+            )
             await db.commit()
+
+    async def reserve_login_attempt(
+        self, client_hash: str, now: float, expires_at: float, limit: int
+    ) -> tuple[int | None, float]:
+        async with connect(self.path) as db:
+            rows = await db.execute_fetchall(
+                """INSERT INTO login_attempts (client_hash, attempts, expires_at) VALUES (?, 1, ?)
+                   ON CONFLICT (client_hash) DO UPDATE SET
+                   attempts = CASE
+                       WHEN login_attempts.expires_at <= ? THEN 1
+                       ELSE login_attempts.attempts + 1
+                   END,
+                   expires_at = CASE
+                       WHEN login_attempts.expires_at <= ? OR login_attempts.attempts = ?
+                       THEN excluded.expires_at
+                       ELSE login_attempts.expires_at
+                   END
+                   WHERE login_attempts.expires_at <= ? OR login_attempts.attempts < ?
+                   RETURNING attempts, expires_at""",
+                (client_hash, expires_at, now, now, limit - 1, now, limit),
+            )
+            if rows:
+                [(attempt, until)] = rows
+                await db.execute(
+                    "DELETE FROM login_attempts WHERE expires_at <= ?", (now,)
+                )
+            else:
+                [(until,)] = await db.execute_fetchall(
+                    "SELECT expires_at FROM login_attempts WHERE client_hash = ?",
+                    (client_hash,),
+                )
+                attempt = None
+            await db.commit()
+        return attempt, until
 
     async def has_session(self, token_hash: str) -> bool:
         async with connect(self.path) as db:

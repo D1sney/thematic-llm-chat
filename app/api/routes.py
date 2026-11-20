@@ -1,6 +1,8 @@
 import hmac
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from ipaddress import IPv6Address, ip_address, ip_network
+from math import ceil
 from secrets import token_urlsafe
 from time import time
 from uuid import UUID, uuid4
@@ -12,11 +14,37 @@ from app.services.model import ModelError
 
 router = APIRouter(prefix="/api/v1")
 SESSION_COOKIE = "interview_session"
+LOGIN_LIMIT = 5
+LOGIN_WINDOW_SECONDS = 600
 
 
 def token_hash(request: Request, token: str) -> str:
     key = request.app.state.settings.access_key.get_secret_value().encode()
     return hmac.digest(key, token.encode(), "sha256").hex()
+
+
+def login_client_hash(request: Request) -> str:
+    host = request.client.host if request.client else "unknown"
+    if request.app.state.settings.vercel:
+        host = request.headers.get("x-forwarded-for", host).split(",", 1)[0].strip()
+    try:
+        address = ip_address(host)
+    except ValueError:
+        host = "unknown"
+    else:
+        if isinstance(address, IPv6Address):
+            host = str(address.ipv4_mapped or ip_network((address, 64), strict=False))
+        else:
+            host = str(address)
+    return token_hash(request, f"login-client:{host}")
+
+
+def login_throttled(now: float, until: float) -> HTTPException:
+    return HTTPException(
+        429,
+        "Слишком много попыток. Попробуйте позже.",
+        headers={"Retry-After": str(max(1, ceil(until - now)))},
+    )
 
 
 async def require_session(request: Request):
@@ -29,20 +57,31 @@ async def require_session(request: Request):
 
 @router.post("/session", status_code=204)
 async def login(body: LoginInput, request: Request, response: Response):
-    settings = request.app.state.settings
+    state = request.app.state
+    settings = state.settings
+    now = time()
+    client_hash = login_client_hash(request)
+    attempt, blocked_until = await state.store.reserve_login_attempt(
+        client_hash, now, now + LOGIN_WINDOW_SECONDS, LOGIN_LIMIT
+    )
+    if attempt is None:
+        raise login_throttled(now, blocked_until)
     if not hmac.compare_digest(
         body.key.encode(), settings.access_key.get_secret_value().encode()
     ):
+        if attempt >= LOGIN_LIMIT:
+            raise login_throttled(now, blocked_until)
         raise HTTPException(
             401, "Ключ доступа не подошёл. Проверьте его и попробуйте снова."
         )
 
     token = token_urlsafe(32)
     old = request.cookies.get(SESSION_COOKIE)
-    await request.app.state.store.save_session(
+    await state.store.save_session(
         token_hash(request, token),
-        time() + settings.session_ttl_seconds,
+        now + settings.session_ttl_seconds,
         token_hash(request, old) if old else None,
+        client_hash,
     )
     response.set_cookie(
         SESSION_COOKIE,
